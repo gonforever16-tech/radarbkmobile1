@@ -1,633 +1,491 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RADAR BK: Life Quest RPG Edition</title>
-  
-  <!-- Tailwind CSS & Google Fonts -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Lucide Icons, Chart.js, Canvas Confetti & jsPDF -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RADAR BK — Pindai Sinyal Masa Depanmu</title>
+  <!-- Chart.js CDN untuk Radar Chart Sinyal Diri -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            display: ['"Space Grotesk"', 'sans-serif']
-          },
-          colors: {
-            neo: {
-              yellow: '#FFDE59',
-              pink: '#FF5E97',
-              cyan: '#38EF7D',
-              blue: '#00F0FF',
-              dark: '#111827',
-              purple: '#8B5CF6'
-            }
-          },
-          boxShadow: {
-            brutal: '4px 4px 0px 0px #111827',
-            'brutal-sm': '2px 2px 0px 0px #111827',
-            'brutal-lg': '6px 6px 0px 0px #111827',
-            'brutal-pink': '4px 4px 0px 0px #FF5E97'
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    body { -webkit-tap-highlight-color: transparent; }
-    @keyframes floatMascot {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-5px) rotate(1.5deg); }
+    :root {
+      --bg-dark: #0d1322;
+      --card-bg: rgba(26, 38, 64, 0.9);
+      --teal: #14b8a6;
+      --amber: #f59e0b;
+      --indigo: #6366f1;
+      --coral: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
     }
-    .animate-float { animation: floatMascot 3s ease-in-out infinite; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background: radial-gradient(circle at top, #1e293b, var(--bg-dark));
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .hidden { display: none; }
+    
+    /* Header Badge */
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .badge-teal { background: rgba(20, 184, 166, 0.2); color: var(--teal); border: 1px solid var(--teal); }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: var(--amber); border: 1px solid var(--amber); }
+
+    h1, h2 { margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+    /* Buttons */
+    .btn {
+      background: linear-gradient(135deg, var(--teal), #0d9488);
+      color: white;
+      border: none;
+      padding: 0.85rem 1.75rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20, 184, 166, 0.4); }
+    .btn-secondary { background: #334155; }
+    .btn-secondary:hover { background: #475569; }
+
+    /* Cards */
+    .choice-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .choice-card:hover {
+      border-color: var(--teal);
+      background: rgba(20, 184, 166, 0.1);
+      transform: scale(1.01);
+    }
+    .choice-card.selected {
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media(max-width: 640px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* AR Screen Sim */
+    .ar-view {
+      border: 2px dashed var(--teal);
+      border-radius: 16px;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      text-align: center;
+      margin: 1rem 0;
+    }
   </style>
 </head>
-<body class="bg-[#FFFDF7] text-neo-dark font-sans antialiased min-h-screen flex justify-center selection:bg-neo-pink selection:text-white pb-12">
+<body>
 
-  <!-- Mobile Frame Container -->
-  <div class="w-full max-w-md bg-[#FFFDF7] min-h-screen flex flex-col relative pb-24 border-x-4 border-neo-dark shadow-2xl">
+<div class="container">
+
+  <!-- ================= 0. POS START ================= -->
+  <section id="step-start">
+    <span class="badge badge-teal">Pos START — Layar Pembuka</span>
+    <h1>RADAR BK</h1>
+    <h3 style="color: var(--teal); margin-bottom: 0.75rem;">YOUR FUTURE IS NOT A GUESS. IT'S A JOURNEY.</h3>
+    <p class="subtitle">Kenali dirimu. Baca pilihanmu. Bandingkan. Tentukan arah. Rancang langkahmu.</p>
     
-    <!-- Top HUD Bar -->
-    <header class="bg-neo-dark text-white px-4 py-3 sticky top-0 z-40 border-b-4 border-neo-dark shadow-sm">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <!-- Karakter Player Avatar -->
-          <div onclick="openCharacterSelector()" title="Ketuk untuk ganti karakter" class="relative w-11 h-11 rounded-xl bg-neo-yellow border-2 border-white flex items-center justify-center shadow-brutal-sm cursor-pointer overflow-hidden animate-float">
-            <img id="hud-avatar-img" src="https://lh3.googleusercontent.com/d/1ABAYY_AdmJs3y4sADcNV9Hfwis3g53pD" alt="Avatar" class="w-full h-full object-cover object-top" crossorigin="anonymous">
-            <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-neo-cyan border-2 border-neo-dark rounded-full"></span>
-          </div>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span id="hud-character-name" class="font-display font-black text-sm tracking-wide text-neo-yellow">SISWA</span>
-              <span class="text-[9px] bg-neo-pink px-1.5 py-0.2 rounded font-black tracking-wider uppercase text-white">TRAVELER BK</span>
-            </div>
-            <p id="hud-status" class="text-[10px] text-slate-300 font-semibold truncate max-w-[140px]">"Siap jelajah masa depan!"</p>
-          </div>
-        </div>
+    <div style="margin: 1.5rem 0;">
+      <label style="font-size: 0.9rem; color: var(--text-muted);">Nama Siswa:</label>
+      <input id="input-nama" type="text" placeholder="Masukkan nama panggilanmu..." style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; margin-top: 0.4rem;" />
+    </div>
 
-        <!-- Level & XP Indicator -->
-        <div class="text-right">
-          <div class="flex items-center justify-end gap-1 font-display font-black text-xs text-neo-blue">
-            <i data-lucide="zap" class="w-3.5 h-3.5 fill-neo-blue"></i>
-            <span id="player-lvl">LVL 1</span>
-          </div>
-          <div class="w-20 bg-slate-800 h-2 rounded-full border border-slate-700 overflow-hidden mt-1">
-            <div id="player-xp-bar" class="bg-neo-cyan h-full rounded-full transition-all duration-500" style="width: 15%"></div>
-          </div>
-        </div>
-      </div>
-    </header>
+    <button class="btn" onclick="startJourney()">Mulai Perjalanan →</button>
+  </section>
 
-    <!-- MAIN QUEST CONTAINER -->
-    <main class="flex-1 p-4 space-y-4">
+  <!-- ================= 1. POS R: REFLEKSI DIRI ================= -->
+  <section id="step-refleksi" class="hidden">
+    <span class="badge badge-amber">Pos R — Refleksi Diri</span>
+    <h2 id="refleksi-title">Kenali Dirimu (S1/6)</h2>
+    <p id="refleksi-pertanyaan" class="subtitle" style="font-size: 1.1rem; color: #e2e8f0; font-weight: 500;"></p>
 
-      <!-- TAB 1: QUEST TREE -->
-      <section id="view-quest" class="space-y-4">
-        
-        <!-- Welcome Banner Karakter -->
-        <div class="bg-gradient-to-r from-neo-yellow via-amber-200 to-emerald-200 border-3 border-neo-dark rounded-2xl p-3.5 shadow-brutal flex items-center gap-3">
-          <div class="w-14 h-14 rounded-xl border-2 border-neo-dark bg-white shrink-0 overflow-hidden shadow-brutal-sm">
-            <img id="banner-avatar-img" src="https://lh3.googleusercontent.com/d/1ABAYY_AdmJs3y4sADcNV9Hfwis3g53pD" class="w-full h-full object-cover object-top" crossorigin="anonymous">
-          </div>
-          <div class="flex-1">
-            <span class="text-[9px] font-black uppercase tracking-wider bg-white px-1.5 py-0.5 rounded border border-neo-dark">SELAMAT DATANG!</span>
-            <h3 class="font-display font-black text-xs text-neo-dark leading-tight mt-1">Mulailah Perjalanan Karaktermu</h3>
-            <p class="text-[10px] font-semibold text-slate-700 mt-0.5">Ketuk avatar di atas bila ingin beralih karakter.</p>
-          </div>
-        </div>
+    <div id="opsi-a" class="choice-card" onclick="pilihOpsi('A')"></div>
+    <div id="opsi-b" class="choice-card" onclick="pilihOpsi('B')"></div>
+  </section>
 
-        <!-- Live Radar HUD Card -->
-        <div class="bg-white border-3 border-neo-dark rounded-2xl p-4 shadow-brutal relative overflow-hidden">
-          <div class="flex items-center justify-between mb-2">
-            <span class="font-display font-black text-xs uppercase tracking-wider text-neo-dark flex items-center gap-1.5">
-              <i data-lucide="radar" class="w-4 h-4 text-neo-pink"></i> STATS RADAR SAYA
-            </span>
-            <span id="quest-counter" class="text-[10px] font-black bg-neo-yellow px-2 py-0.5 rounded-full border border-neo-dark">
-              MISI 1 / 6
-            </span>
-          </div>
-          <div class="h-44 w-full flex items-center justify-center">
-            <canvas id="liveRadarChart"></canvas>
-          </div>
-        </div>
+  <!-- ================= 1B. MY SIGNALS (OUTPUT R) ================= -->
+  <section id="step-signals" class="hidden">
+    <span class="badge badge-teal">Output Pos R — My Signals</span>
+    <h2>Peta Frekuensi Sinyalmu</h2>
+    <p class="subtitle">"Ini adalah sinyal tentang dirimu, bukan batasan untuk masa depanmu."</p>
 
-        <!-- Peta Jalur Misi (Sequential Tree) -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h2 class="font-display font-black text-sm uppercase tracking-wide">Peta Misi Simulasi</h2>
-            <span class="text-[10px] text-slate-500 font-bold">Unlock misi satu per satu 🔓</span>
-          </div>
-          <div id="quest-list" class="space-y-3"></div>
-        </div>
-      </section>
+    <div style="max-width: 420px; margin: 0 auto 1.5rem;">
+      <canvas id="radarChart"></canvas>
+    </div>
+    
+    <div id="signal-summary" style="margin-bottom: 1.5rem; text-align: center; color: var(--amber); font-weight: 600;"></div>
+    <button class="btn" onclick="gotoAnalisis()">Lanjut → Pos A: Analisis Pilihan</button>
+  </section>
 
-      <!-- TAB 2: EXPLORE & AR -->
-      <section id="view-explore" class="hidden space-y-4">
-        <div class="bg-neo-yellow border-3 border-neo-dark rounded-2xl p-4 shadow-brutal">
-          <span class="text-[10px] font-black uppercase tracking-wider bg-white px-2 py-0.5 rounded border border-neo-dark">KATALOG MASA DEPAN</span>
-          <h2 class="font-display font-black text-lg mt-1 leading-tight">Eksplorasi Program Studi</h2>
-          <p class="text-xs font-semibold text-slate-800 mt-1">Cari rumpun ilmu yang seirama dengan sinyal potensimu.</p>
-        </div>
+  <!-- ================= 2. POS A: ANALISIS & AR ================= -->
+  <section id="step-analisis" class="hidden">
+    <span class="badge badge-teal">Pos A — Analisis Pilihan & AR</span>
+    <h2>Baca Pilihanmu</h2>
+    <p class="subtitle">Eksplorasi pilihan prodi dan rasakan simulasi pengalaman AR.</p>
 
-        <div class="relative">
-          <input type="text" id="search-prodi" onkeyup="filterProdiCatalog()" placeholder="Ketik prodi impian (Psikologi, Seni, Teknik)..." class="w-full text-xs font-bold p-3 pl-9 rounded-xl border-3 border-neo-dark shadow-brutal-sm focus:outline-none focus:bg-amber-50">
-          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5"></i>
-        </div>
+    <div class="grid-3" id="katalog-container"></div>
 
-        <div id="catalog-container" class="space-y-3"></div>
-      </section>
-
-      <!-- TAB 3: COMPARE -->
-      <section id="view-compare" class="hidden space-y-4">
-        <div class="bg-neo-blue border-3 border-neo-dark rounded-2xl p-4 shadow-brutal">
-          <span class="text-[10px] font-black uppercase tracking-wider bg-white px-2 py-0.5 rounded border border-neo-dark">HEAD TO HEAD</span>
-          <h2 class="font-display font-black text-lg mt-1 text-slate-900 leading-tight">Adu Dua Pilihan Impian</h2>
-          <p class="text-xs font-semibold text-slate-900 mt-1">Bandingkan prodi secara objektif sebelum mengunci pilihan.</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <div class="bg-white p-2.5 rounded-xl border-3 border-neo-dark shadow-brutal-sm">
-            <label class="text-[10px] font-black uppercase block text-slate-500 mb-1">Sudut Biru</label>
-            <select id="sel-prodi-1" onchange="renderComparison()" class="w-full text-xs font-black bg-transparent focus:outline-none"></select>
-          </div>
-          <div class="bg-white p-2.5 rounded-xl border-3 border-neo-dark shadow-brutal-sm">
-            <label class="text-[10px] font-black uppercase block text-slate-500 mb-1">Sudut Merah</label>
-            <select id="sel-prodi-2" onchange="renderComparison()" class="w-full text-xs font-black bg-transparent focus:outline-none"></select>
-          </div>
-        </div>
-
-        <div class="bg-white border-3 border-neo-dark rounded-2xl shadow-brutal overflow-hidden">
-          <div class="grid grid-cols-2 bg-neo-dark text-white text-center py-2.5 font-display font-black text-xs">
-            <div id="comp-t-1" class="border-r border-slate-700 px-2 truncate">Prodi 1</div>
-            <div id="comp-t-2" class="px-2 truncate">Prodi 2</div>
-          </div>
-          <div class="p-3 space-y-3 text-xs font-bold divide-y-2 divide-slate-100">
-            <div class="pt-2">
-              <span class="text-[9px] uppercase font-black text-slate-400 block text-center mb-1">Rumpun & RIASEC</span>
-              <div class="grid grid-cols-2 text-center text-slate-800">
-                <span id="comp-riasec-1">-</span>
-                <span id="comp-riasec-2">-</span>
-              </div>
-            </div>
-            <div class="pt-3">
-              <span class="text-[9px] uppercase font-black text-slate-400 block text-center mb-1">Mapel Kurikulum Merdeka</span>
-              <div class="grid grid-cols-2 text-center text-slate-600 text-[11px]">
-                <span id="comp-mapel-1">-</span>
-                <span id="comp-mapel-2">-</span>
-              </div>
-            </div>
-            <div class="pt-3">
-              <span class="text-[9px] uppercase font-black text-slate-400 block text-center mb-1">Prospek Karier Digital</span>
-              <div class="grid grid-cols-2 text-center text-neo-pink text-[11px]">
-                <span id="comp-career-1">-</span>
-                <span id="comp-career-2">-</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: PASSPORT & ACTION PLAN -->
-      <section id="view-passport" class="hidden space-y-4">
-        
-        <!-- Passport Identity Card (Target PDF) -->
-        <div id="passport-card" class="bg-gradient-to-br from-[#FFFDF7] to-amber-50 border-4 border-neo-dark rounded-3xl p-5 shadow-brutal-lg relative overflow-hidden">
-          
-          <div class="flex items-start justify-between border-b-3 border-neo-dark pb-3 mb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-2xl">🧭</span>
-              <div>
-                <h3 class="font-display font-black text-base text-neo-dark leading-none">FUTURE PASSPORT</h3>
-                <span class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">RADAR BK • PETA MASA DEPAN</span>
-              </div>
-            </div>
-            <span class="bg-neo-cyan border-2 border-neo-dark text-neo-dark text-[9px] font-black px-2 py-0.5 rounded-full uppercase">VERIFIED</span>
-          </div>
-
-          <!-- Profil dengan Foto Karakter -->
-          <div class="flex items-center gap-3 bg-white p-3 rounded-2xl border-2 border-neo-dark shadow-brutal-sm mb-3">
-            <div class="w-14 h-14 rounded-xl border-2 border-neo-dark bg-neo-yellow overflow-hidden shrink-0">
-              <img id="pass-avatar-img" src="https://lh3.googleusercontent.com/d/1ABAYY_AdmJs3y4sADcNV9Hfwis3g53pD" class="w-full h-full object-cover object-top" crossorigin="anonymous">
-            </div>
-            <div class="flex-1">
-              <label class="text-[9px] font-black uppercase text-slate-400 block">Nama Peserta Didik</label>
-              <input type="text" id="pass-student-name" value="Siswa Merdeka" class="font-display font-black text-sm text-neo-dark w-full bg-transparent border-b border-dashed border-slate-300 focus:outline-none">
-            </div>
-          </div>
-
-          <div class="space-y-3 mb-4">
-            <div class="grid grid-cols-2 gap-2">
-              <div class="bg-white p-2.5 rounded-xl border-2 border-neo-dark shadow-brutal-sm">
-                <span class="text-[9px] font-black uppercase text-slate-400 block">Archetype Persona</span>
-                <span id="pass-archetype" class="font-display font-black text-xs text-neo-pink">The Visionary Explorer</span>
-              </div>
-              <div class="bg-white p-2.5 rounded-xl border-2 border-neo-dark shadow-brutal-sm">
-                <span class="text-[9px] font-black uppercase text-slate-400 block">Status Kesiapan</span>
-                <span id="pass-readiness" class="font-display font-black text-xs text-emerald-600">Mulai Mengerucut</span>
-              </div>
-            </div>
-
-            <div class="bg-white p-3 rounded-xl border-2 border-neo-dark shadow-brutal-sm">
-              <span class="text-[9px] font-black uppercase text-slate-400 block mb-1">Target Pilihan Program Studi</span>
-              <div class="flex items-center justify-between text-xs font-black">
-                <span class="text-neo-dark">1. <span id="pass-prodi-1">Psikologi</span></span>
-                <span class="text-slate-500">2. <span id="pass-prodi-2">Seni Desain</span></span>
-              </div>
-            </div>
-
-            <div class="bg-white p-3 rounded-xl border-2 border-neo-dark shadow-brutal-sm">
-              <span class="text-[9px] font-black uppercase text-slate-400 block mb-1">Rencana Aksi Konkret (Action Step)</span>
-              <textarea id="pass-action-plan" rows="2" class="w-full text-xs font-semibold text-slate-800 bg-transparent focus:outline-none" placeholder="Tuliskan 1 langkah nyata minggu ini..."></textarea>
-            </div>
-          </div>
-
-          <div class="text-[9px] text-center text-slate-400 font-bold border-t-2 border-dashed border-slate-200 pt-2">
-            "Ini adalah arah sinyal eksplorasi saya saat ini, bukan batasan masa depan saya."
-          </div>
-        </div>
-
-        <!-- Buttons -->
-        <div class="space-y-2">
-          <button onclick="saveAndDownloadPassport()" class="w-full bg-neo-pink text-white font-display font-black py-4 rounded-2xl border-3 border-neo-dark shadow-brutal hover:bg-pink-600 active:translate-y-1 transition flex items-center justify-center gap-2 text-sm">
-            <i data-lucide="download" class="w-5 h-5"></i>
-            <span>UNDUH PASSPORT SAYA (PDF 1 HALAMAN)</span>
-          </button>
-          
-          <button onclick="resetAllQuests()" class="w-full bg-white text-slate-600 font-bold py-2.5 rounded-xl border-2 border-slate-300 hover:bg-slate-50 text-xs flex items-center justify-center gap-1.5">
-            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-            <span>Reset Seluruh Misi dari Awal</span>
-          </button>
-        </div>
-
-      </section>
-
-    </main>
-
-    <!-- BOTTOM NAVIGATION BAR -->
-    <nav class="fixed bottom-0 w-full max-w-md bg-white border-t-4 border-neo-dark grid grid-cols-4 py-2 px-1 z-40 shadow-2xl">
-      <button onclick="switchView('quest')" id="nav-quest" class="flex flex-col items-center gap-1 py-1 text-neo-pink font-black transition">
-        <i data-lucide="sword" class="w-5 h-5"></i>
-        <span class="text-[10px] font-display">Misi RPG</span>
-      </button>
-      <button onclick="switchView('explore')" id="nav-explore" class="flex flex-col items-center gap-1 py-1 text-slate-400 hover:text-neo-dark transition">
-        <i data-lucide="compass" class="w-5 h-5"></i>
-        <span class="text-[10px] font-display">Eksplorasi</span>
-      </button>
-      <button onclick="switchView('compare')" id="nav-compare" class="flex flex-col items-center gap-1 py-1 text-slate-400 hover:text-neo-dark transition">
-        <i data-lucide="scale" class="w-5 h-5"></i>
-        <span class="text-[10px] font-display">Bandingkan</span>
-      </button>
-      <button onclick="switchView('passport')" id="nav-passport" class="flex flex-col items-center gap-1 py-1 text-slate-400 hover:text-neo-dark transition">
-        <i data-lucide="award" class="w-5 h-5"></i>
-        <span class="text-[10px] font-display">Passport ID</span>
-      </button>
-    </nav>
-
-    <!-- MODAL PILIH KARAKTER -->
-    <div id="modal-char-select" class="fixed inset-0 bg-neo-dark/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-      <div class="bg-[#FFFDF7] w-full max-w-sm rounded-3xl border-4 border-neo-dark p-5 shadow-brutal-lg text-center relative animate-in fade-in zoom-in-95 duration-200">
-        <span class="text-[10px] font-black uppercase bg-neo-yellow px-2 py-0.5 rounded border border-neo-dark">PILIH AVATAR KAMU</span>
-        <h3 class="font-display font-black text-base text-neo-dark mt-1">Pilih Karakter Pelajar</h3>
-        <p class="text-xs font-semibold text-slate-600 mt-1 mb-4">Pilih karakter yang akan mewakili petualangan eksplorasimu:</p>
-        
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <!-- Karakter Siswa -->
-          <div onclick="selectCharacter('siswa')" id="card-char-siswa" class="p-3 rounded-2xl border-3 border-neo-pink bg-white cursor-pointer shadow-brutal-sm transition text-center">
-            <div class="w-20 h-24 rounded-xl border-2 border-neo-dark bg-amber-100 mx-auto overflow-hidden mb-2">
-              <img src="https://lh3.googleusercontent.com/d/1ABAYY_AdmJs3y4sADcNV9Hfwis3g53pD" class="w-full h-full object-cover object-top" crossorigin="anonymous">
-            </div>
-            <span class="font-display font-black text-xs block text-neo-dark">Siswa</span>
-          </div>
-
-          <!-- Karakter Siswi -->
-          <div onclick="selectCharacter('siswi')" id="card-char-siswi" class="p-3 rounded-2xl border-3 border-neo-dark bg-white hover:bg-emerald-50 cursor-pointer shadow-brutal-sm transition text-center">
-            <div class="w-20 h-24 rounded-xl border-2 border-neo-dark bg-rose-100 mx-auto overflow-hidden mb-2">
-              <img src="https://lh3.googleusercontent.com/d/1ubn7PC3KWvCbB1BXj-QDurKzFgtB99g2" class="w-full h-full object-cover object-top" crossorigin="anonymous">
-            </div>
-            <span class="font-display font-black text-xs block text-neo-dark">Siswi</span>
-          </div>
-        </div>
-
-        <button onclick="closeCharacterSelector()" class="w-full bg-neo-dark text-white font-display font-black py-2.5 rounded-xl text-xs shadow-brutal-sm">
-          GUNAKAN KARAKTER INI
-        </button>
+    <div id="ar-modal" class="ar-view hidden">
+      <h3 id="ar-title" style="color: var(--teal); margin-bottom: 0.5rem;"></h3>
+      <div id="ar-details" style="font-size: 0.95rem; text-align: left; margin: 1rem 0; line-height: 1.5;"></div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Bagaimana responsmu terhadap pilihan ini?</p>
+      <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="saveARResponse('MENARIK')">❤️ Menarik</button>
+        <button class="btn btn-secondary" onclick="saveARResponse('MASIH INGIN TAHU')">🤔 Masih Ingin Tahu</button>
+        <button class="btn btn-secondary" onclick="saveARResponse('KURANG SESUAI')">↘ Kurang Sesuai</button>
       </div>
     </div>
 
-    <!-- MODAL DIALOG MISI DENGAN KARAKTER -->
-    <div id="modal-quest" class="fixed inset-0 bg-neo-dark/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-      <div class="bg-[#FFFDF7] w-full max-w-md rounded-t-3xl sm:rounded-3xl border-t-4 sm:border-4 border-neo-dark p-5 shadow-2xl max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
-        
-        <div class="flex items-center justify-between pb-3 border-b-2 border-slate-200 mb-3">
-          <div class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-xl border-2 border-neo-dark bg-white overflow-hidden shadow-brutal-sm">
-              <img id="dialog-char-img" src="https://lh3.googleusercontent.com/d/1ABAYY_AdmJs3y4sADcNV9Hfwis3g53pD" class="w-full h-full object-cover object-top" crossorigin="anonymous">
-            </div>
-            <div>
-              <span id="modal-mission-tag" class="text-[10px] font-black uppercase bg-neo-yellow px-2 py-0.5 rounded border border-neo-dark">MISI 1</span>
-              <h3 id="modal-mission-title" class="font-display font-black text-sm text-neo-dark mt-0.5">Dilema Jam Kosong</h3>
-            </div>
-          </div>
-          <button onclick="closeQuestModal()" class="w-8 h-8 rounded-xl bg-slate-100 border-2 border-neo-dark flex items-center justify-center text-slate-600 font-bold hover:bg-rose-100">✕</button>
-        </div>
+    <button id="btn-next-analisis" class="btn hidden" style="margin-top: 1.5rem;" onclick="gotoDekomposisi()">Lanjut → Pos D: Dekomposisi</button>
+  </section>
 
-        <div class="bg-amber-100/70 border-2 border-neo-dark rounded-2xl p-3.5 mb-4 relative">
-          <p id="modal-narrative" class="text-xs font-bold text-slate-800 leading-relaxed"></p>
-        </div>
+  <!-- ================= 3. POS D: DEKOMPOSISI ================= -->
+  <section id="step-dekomposisi" class="hidden">
+    <span class="badge badge-amber">Pos D — Dekomposisi Pilihan</span>
+    <h2>Bandingkan Pilihan</h2>
+    <p class="subtitle">Beri skor pertimbangan reflektif (1-5) untuk pilihan yang kamu eksplorasi.</p>
 
-        <div class="space-y-2.5" id="modal-options-container"></div>
+    <div id="compare-form"></div>
+    <button class="btn" style="margin-top: 1rem;" onclick="gotoArah()">Lanjut → Pos A: Arah Keputusan</button>
+  </section>
 
-        <div id="modal-feedback-box" class="mt-4 p-3.5 rounded-xl border-2 border-neo-dark bg-neo-cyan/20 hidden">
-          <p id="modal-feedback-text" class="text-xs font-bold text-slate-900"></p>
-          <button onclick="proceedNextQuest()" class="w-full mt-3 bg-neo-dark text-white font-display font-black py-2.5 rounded-xl shadow-brutal-sm hover:bg-slate-800 text-xs">
-            BUKA GEMBOK MISI BERIKUTNYA ➔
-          </button>
-        </div>
+  <!-- ================= 4. POS A: ARAH KEPUTUSAN ================= -->
+  <section id="step-arah" class="hidden">
+    <span class="badge badge-teal">Pos A — Arah Keputusan</span>
+    <h2>Seberapa Siap Kamu?</h2>
+    <p class="subtitle">Tentukan waypoint kesiapan langkahmu saat ini.</p>
 
+    <div class="choice-card" onclick="pilihKesiapan('Masih Eksplorasi')">
+      <h3>🔍 Masih Eksplorasi</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Saya masih membutuhkan lebih banyak informasi dan pengalaman.</p>
+    </div>
+    <div class="choice-card" onclick="pilihKesiapan('Mulai Mengerucut')">
+      <h3>🎯 Mulai Mengerucut</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Saya mulai menemukan 1–2 pilihan yang terasa lebih jelas.</p>
+    </div>
+    <div class="choice-card" onclick="pilihKesiapan('Cukup Yakin')">
+      <h3>🚀 Cukup Yakin</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Saya memiliki pilihan yang cukup kuat untuk mulai direncanakan.</p>
+    </div>
+  </section>
+
+  <!-- ================= 5. POS R: RENCANA AKSI ================= -->
+  <section id="step-aksi" class="hidden">
+    <span class="badge badge-amber">Pos R — Rencana Aksi</span>
+    <h2>My Next Step</h2>
+    <p class="subtitle">Ubah hasil eksplorasi menjadi langkah nyata.</p>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <div>
+        <label style="font-size: 0.9rem; color: var(--teal); font-weight: 600;">🔎 CARI TAHU (Informasi yang masih perlu saya cari):</label>
+        <input id="action-cari" type="text" placeholder="Misal: Kurikulum prodi & biaya kuliah..." style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; margin-top: 0.3rem;" />
+      </div>
+      <div>
+        <label style="font-size: 0.9rem; color: var(--amber); font-weight: 600;">🚀 COBA (Hal yang ingin saya coba):</label>
+        <input id="action-coba" type="text" placeholder="Misal: Mengikuti workshop atau latihan proyek kecil..." style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; margin-top: 0.3rem;" />
+      </div>
+      <div>
+        <label style="font-size: 0.9rem; color: var(--coral); font-weight: 600;">🎯 RENCANAKAN (Langkah pertama saya):</label>
+        <input id="action-rencana" type="text" placeholder="Misal: Konsultasi ke Guru BK minggu depan..." style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; margin-top: 0.3rem;" />
       </div>
     </div>
 
-    <!-- MODAL AR SCANNER SIMULATOR -->
-    <div id="modal-ar" class="fixed inset-0 bg-neo-dark/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-      <div class="bg-[#FFFDF7] w-full max-w-sm rounded-3xl border-4 border-neo-dark p-5 shadow-brutal-lg text-center relative">
-        <button onclick="closeARModal()" class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-slate-100 border-2 border-neo-dark flex items-center justify-center font-bold">✕</button>
-        <div class="w-16 h-16 rounded-2xl bg-neo-yellow border-3 border-neo-dark flex items-center justify-center text-3xl mx-auto mb-3 animate-pulse">📷</div>
-        <h3 class="font-display font-black text-base text-neo-dark">WebAR Marker Scanner</h3>
-        <p class="text-xs font-semibold text-slate-600 mt-1 mb-4">Arahkan kamera ke kartu fisik prodi RADAR BK atau tap tombol di bawah.</p>
-        
-        <div class="w-full h-44 bg-slate-900 rounded-2xl border-3 border-neo-dark flex flex-col items-center justify-center text-white p-4 relative overflow-hidden">
-          <div class="w-32 h-32 border-2 border-dashed border-neo-cyan rounded-xl flex items-center justify-center text-xs text-neo-cyan font-mono animate-spin" style="animation-duration: 12s;">
-            [SCANNING...]
-          </div>
-          <span class="absolute bottom-2 text-[10px] text-slate-400 font-mono">RADAR-BK AR ENGINE</span>
-        </div>
+    <button class="btn" style="margin-top: 1.5rem;" onclick="generateFutureMap()">Buat Personal Future Map →</button>
+  </section>
 
-        <button onclick="simulateARSuccess()" class="w-full mt-4 bg-neo-cyan font-display font-black py-3 rounded-xl border-3 border-neo-dark shadow-brutal-sm text-xs">
-          SIMULASI PINDAI KARTU SUKSES ✨
-        </button>
-      </div>
+  <!-- ================= 6. FINAL: PERSONAL FUTURE MAP ================= -->
+  <section id="step-final" class="hidden">
+    <span class="badge badge-teal">Pos FINAL — Output</span>
+    <h2>🧭 Personal Future Map</h2>
+    <p class="subtitle">Peta eksplorasi masa depanmu yang dinamis dan siap diunduh.</p>
+
+    <div id="future-map-card" style="border: 2px solid var(--teal); border-radius: 16px; padding: 1.5rem; background: rgba(15, 23, 42, 0.8); margin-bottom: 1.5rem;">
+      <h3 id="out-nama" style="color: var(--amber); margin-bottom: 0.5rem;"></h3>
+      <p><strong>Top Sinyal Diri:</strong> <span id="out-signals"></span></p>
+      <p><strong>Status Kesiapan:</strong> <span id="out-readiness"></span></p>
+      <p><strong>Pilihan Utama Eksplorasi:</strong> <span id="out-prodi"></span></p>
+      <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 0.75rem 0;" />
+      <h4 style="color: var(--teal); margin-bottom: 0.25rem;">Rencana Aksiku:</h4>
+      <ul style="padding-left: 1.25rem; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+        <li>Cari Tahu: <span id="out-cari"></span></li>
+        <li>Coba: <span id="out-coba"></span></li>
+        <li>Rencanakan: <span id="out-rencana"></span></li>
+      </ul>
     </div>
 
-  </div>
+    <div style="display: flex; gap: 1rem;">
+      <button class="btn" onclick="window.print()">📥 Download / Cetak Map</button>
+      <button class="btn btn-secondary" onclick="location.reload()">↻ Mulai Ulang / Edit</button>
+    </div>
+  </section>
 
-  <script>
-    // URL Gambar Karakter Google Drive
-    const CHARACTERS = {
-      siswa: {
-        name: "Siswa",
-        url: "https://lh3.googleusercontent.com/d/1ABAYY_AdmJs3y4sADcNV9Hfwis3g53pD"
+</div>
+
+<script>
+  // 1. DATA MASTER DARI EXCEL DATABASE
+  const stimulusData = [
+    {
+      id: "S1",
+      situasi: "Saat jam luang di madrasah, kegiatan yang paling menarik bagimu adalah...",
+      opsiA: "Mengutak-atik alat, merakit perangkat fisik, atau bereksperimen benda nyata",
+      tipeA: "R",
+      opsiB: "Mengobrol santai, mendengarkan cerita, atau membantu teman yang sedang galau",
+      tipeB: "S"
+    },
+    {
+      id: "S2",
+      situasi: "Tantangan belajar yang paling memicu rasa penasaranmu adalah...",
+      opsiA: "Menganalisis data, memecahkan teka-teki logika, atau mencari tahu sains di balik masalah",
+      tipeA: "I",
+      opsiB: "Merancang ide bisnis, jualan produk, atau memimpin diskusi kepanitiaan",
+      tipeB: "E"
+    },
+    {
+      id: "S3",
+      situasi: "Bentuk proyek kolaborasi yang paling memuaskan untuk kamu kerjakan adalah...",
+      opsiA: "Membuat poster desain grafis, video sinematik, atau menulis naskah kreatif",
+      tipeA: "A",
+      opsiB: "Menyusun pembagian tugas tim, merapikan file arsip, dan mengatur jadwal teratur",
+      tipeB: "C"
+    },
+    {
+      id: "S4",
+      situasi: "Isu masa depan di era digital yang paling ingin kamu pelajari lebih dalam adalah...",
+      opsiA: "Rekayasa teknologi cerdas, kecerdasan buatan, sains data, atau bioteknologi",
+      tipeA: "I",
+      opsiB: "Dinamika masyarakat, komunikasi publik, perilaku manusia, dan dampak sosialnya",
+      tipeB: "S"
+    },
+    {
+      id: "S5",
+      situasi: "Ketika harus mengambil keputusan penting yang menentukan masa depanmu...",
+      opsiA: "Mengumpulkan data objektif, membedah untung-rugi secara logis, dan melihat fakta",
+      tipeA: "I",
+      opsiB: "Merenungkan kecocokan hati nurani, nilai hidup, dan dampaknya bagi sesama",
+      tipeB: "S"
+    },
+    {
+      id: "S6",
+      situasi: "Dampak nyata yang paling ingin kamu hasilkan setelah lulus kuliah nanti adalah...",
+      opsiA: "Menemukan inovasi teknologi, riset ilmiah, atau menciptakan produk baru",
+      tipeA: "R",
+      opsiB: "Mengadvokasi masyarakat, membimbing generasi muda, atau memimpin lembaga publik",
+      tipeB: "E"
+    }
+  ];
+
+  const katalogProdi = [
+    { nama: "Seni & DKV", signal: "Artistik", mapel: "Seni Budaya", karir: "UI/UX Designer, Game Artist" },
+    { nama: "Informatika / Sains Data", signal: "Investigatif", mapel: "Matematika Tingkat Lanjut", karir: "AI Engineer, Data Analyst" },
+    { nama: "Psikologi", signal: "Sosial", mapel: "Sosiologi / Biologi", karir: "Counselor, HR Specialist, UX Researcher" },
+    { nama: "Manajemen & Bisnis Digital", signal: "Enterprising", mapel: "Ekonomi", karir: "Product Manager, Tech Entrepreneur" },
+    { nama: "Teknik Mekatronika", signal: "Realistik", mapel: "Fisika / Matematika", karir: "Robotics Engineer, Hardware Specialist" },
+    { nama: "Sains Informasi & Kearsipan", signal: "Konvensional", mapel: "Bahasa Inggris / Informatika", karir: "Database Administrator, Archivist" }
+  ];
+
+  // STATE APLIKASI
+  let userData = {
+    nama: "",
+    scores: { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
+    currentQuestion: 0,
+    selectedProdi: [],
+    arChoice: null,
+    readiness: "",
+    actions: { cari: "", coba: "", rencana: "" }
+  };
+
+  function switchScreen(hideId, showId) {
+    document.getElementById(hideId).classList.add('hidden');
+    document.getElementById(showId).classList.remove('hidden');
+  }
+
+  // FLOW 0 -> 1
+  function startJourney() {
+    userData.nama = document.getElementById('input-nama').value.trim() || "Siswa Penjelajah";
+    switchScreen('step-start', 'step-refleksi');
+    loadStimulus();
+  }
+
+  // FLOW 1: POS R
+  function loadStimulus() {
+    const q = stimulusData[userData.currentQuestion];
+    document.getElementById('refleksi-title').innerText = `Kenali Dirimu (S${userData.currentQuestion + 1}/6)`;
+    document.getElementById('refleksi-pertanyaan').innerText = q.situasi;
+    document.getElementById('opsi-a').innerHTML = `<strong>A.</strong> ${q.opsiA}`;
+    document.getElementById('opsi-b').innerHTML = `<strong>B.</strong> ${q.opsiB}`;
+  }
+
+  function pilihOpsi(opsi) {
+    const q = stimulusData[userData.currentQuestion];
+    const signal = (opsi === 'A') ? q.tipeA : q.tipeB;
+    userData.scores[signal]++;
+
+    userData.currentQuestion++;
+    if (userData.currentQuestion < stimulusData.length) {
+      loadStimulus();
+    } else {
+      showSignalsOutput();
+    }
+  }
+
+  // FLOW 1B: RADAR CHART
+  function showSignalsOutput() {
+    switchScreen('step-refleksi', 'step-signals');
+    const sorted = Object.entries(userData.scores).sort((a,b) => b[1] - a[1]);
+    const topSignals = sorted.slice(0, 3).map(x => x[0]).join(' - ');
+    document.getElementById('signal-summary').innerText = `Sinyal Dominanmu: ${topSignals}`;
+
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Realistik (R)', 'Investigatif (I)', 'Artistik (A)', 'Sosial (S)', 'Enterprising (E)', 'Konvensional (C)'],
+        datasets: [{
+          label: 'Frekuensi Sinyal Reflektif',
+          data: [
+            userData.scores.R, userData.scores.I, userData.scores.A,
+            userData.scores.S, userData.scores.E, userData.scores.C
+          ],
+          backgroundColor: 'rgba(20, 184, 166, 0.25)',
+          borderColor: '#14b8a6',
+          borderWidth: 2,
+          pointBackgroundColor: '#f59e0b'
+        }]
       },
-      siswi: {
-        name: "Siswi",
-        url: "https://lh3.googleusercontent.com/d/1ubn7PC3KWvCbB1BXj-QDurKzFgtB99g2"
-      }
-    };
-
-    let selectedCharKey = 'siswa';
-
-    function selectCharacter(key) {
-      selectedCharKey = key;
-      const char = CHARACTERS[key];
-      document.getElementById('hud-avatar-img').src = char.url;
-      document.getElementById('banner-avatar-img').src = char.url;
-      document.getElementById('dialog-char-img').src = char.url;
-      document.getElementById('pass-avatar-img').src = char.url;
-      document.getElementById('hud-character-name').textContent = char.name.toUpperCase();
-      
-      document.getElementById('card-char-siswa').classList.toggle('border-neo-pink', key === 'siswa');
-      document.getElementById('card-char-siswa').classList.toggle('border-neo-dark', key !== 'siswa');
-      document.getElementById('card-char-siswi').classList.toggle('border-neo-pink', key === 'siswi');
-      document.getElementById('card-char-siswi').classList.toggle('border-neo-dark', key !== 'siswi');
-    }
-
-    function openCharacterSelector() {
-      document.getElementById('modal-char-select').classList.remove('hidden');
-    }
-    function closeCharacterSelector() {
-      document.getElementById('modal-char-select').classList.add('hidden');
-    }
-
-    // Audio Web API
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(freq, type = 'sine', duration = 0.1) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    }
-    function soundBlip() { playBeep(520, 'square', 0.08); }
-    function soundSuccess() {
-      playBeep(440, 'triangle', 0.1);
-      setTimeout(() => playBeep(880, 'sine', 0.25), 100);
-    }
-    function soundWarning() { playBeep(220, 'sawtooth', 0.2); }
-
-    // Misi Quest
-    const questMissions = [
-      {
-        id: 1,
-        title: "Dilema Waktu Luang",
-        narrative: "Jam pelajaran lagi kosong nih! Teman-temanmu pada santai. Kegiatan mana yang paling menarik buat energimu?",
-        optA: { text: "Mengotak-atik gawai, rakit elektronik, atau eksperimen benda fisik.", stat: "pribadi", add: 15, tag: "Realistic" },
-        optB: { text: "Membaca teori baru, pecahin teka-teki logika, atau kepoin sains.", stat: "belajar", add: 15, tag: "Investigative" }
-      },
-      {
-        id: 2,
-        title: "Proyek Pentas & Ide",
-        narrative: "Sekolah mau adakan pameran karya akbar! Tim kamu butuh kontribusi ide dari kamu. Apa yang kamu pilih?",
-        optA: { text: "Bikin konsep visual, instalasi pameran, ilustrasi atau naskah cerita.", stat: "pribadi", add: 15, tag: "Artistic" },
-        optB: { text: "Dengerin teman, jembatani diskusi tim & dampingi kelancaran bersama.", stat: "sosial", add: 15, tag: "Social" }
-      },
-      {
-        id: 3,
-        title: "Tantangan Kepemimpinan",
-        narrative: "Kegiatan kekurangan dana dan tersisa waktu sedikit. Strategi mana yang akan kamu pilih?",
-        optA: { text: "Presentasi di depan pihak luar, meyakinkan sponsor dan ajak kerja sama.", stat: "karier", add: 15, tag: "Enterprising" },
-        optB: { text: "Bikin sistem anggaran teliti, catat logistik dan kelola jadwal teratur.", stat: "belajar", add: 15, tag: "Conventional" }
-      },
-      {
-        id: 4,
-        title: "Eksplorasi Teknologi vs Manusia",
-        narrative: "Teknologi digital berkembang cepat. Kamu lebih tertarik mendalami aspek yang mana?",
-        optA: { text: "Koding AI cerdas, algoritma sistem, dan analisis data.", stat: "belajar", add: 15, tag: "Tech Science" },
-        optB: { text: "Psikologi pengguna, dinamika sosial dan dampak interaksi manusia.", stat: "sosial", add: 15, tag: "Human Dynamics" }
-      },
-      {
-        id: 5,
-        title: "Lingkungan Kerja Idaman",
-        narrative: "Bayangkan kamu telah lulus studi. Lingkungan kerja seperti apa yang kamu inginkan?",
-        optA: { text: "Studio mandiri fleksibel dengan ruang berkreasi bebas.", stat: "karier", add: 15, tag: "Creative Studio" },
-        optB: { text: "Ruang kolaborasi strategis memimpin tim menciptakan dampak nyata.", stat: "karier", add: 15, tag: "Strategic Lead" }
-      },
-      {
-        id: 6,
-        title: "Peta Komitmen Masa Depan",
-        narrative: "Kamu tiba di tahap akhir refleksi. Apa makna masa depan bagimu?",
-        optA: { text: "Sebuah jalan untuk terus belajar dan memahami hal baru di dunia.", stat: "belajar", add: 15, tag: "Lifelong Scholar" },
-        optB: { text: "Karya nyata untuk mendampingi orang lain dan memberi manfaat luas.", stat: "sosial", add: 15, tag: "Empathic Changemaker" }
-      }
-    ];
-
-    const prodiData = [
-      { id: 'psikologi', name: 'Psikologi', rumpun: 'Ilmu Sosial', riasec: 'Sosial (S-I)', desc: 'Memahami perilaku, dinamika mental, dan metode asesmen interaksi manusia.', mapel: 'Sosiologi, Biologi', career: 'HR Talent Partner, UX Researcher, Konselor' },
-      { id: 'seni', name: 'Seni & Desain Visual', rumpun: 'Humaniora', riasec: 'Artistik (A)', desc: 'Mempelajari kreasi visual, ilustrasi digital, estetika, dan narasi multimedia interaktif.', mapel: 'Seni Budaya, Bahasa', career: 'UI/UX Designer, Creative Director, Game Artist' },
-      { id: 'ekonomi', name: 'Ilmu Ekonomi & Bisnis', rumpun: 'Ilmu Sosial', riasec: 'Enterprising (E-C)', desc: 'Menganalisis perputaran finansial, strategi pasar digital, dan manajemen investasi.', mapel: 'Ekonomi, Matematika', career: 'Financial Analyst, Strategic Growth, Konsultan' },
-      { id: 'linguistik', name: 'Linguistik & Sastra', rumpun: 'Humaniora', riasec: 'Investigatif (I-A)', desc: 'Analisis tata bahasa, semantik, literasi budaya, dan teknologi bahasa komputasi.', mapel: 'Bahasa Indonesia, Inggris', career: 'Language Specialist, AI Prompt Engineer, Editor' }
-    ];
-
-    let stats = { pribadi: 50, sosial: 50, belajar: 55, karier: 45 };
-    let unlockedQuest = 1;
-    let completedQuests = {};
-    let activeModalQuest = null;
-    let radarChart = null;
-
-    function initRadar() {
-      const ctx = document.getElementById('liveRadarChart').getContext('2d');
-      radarChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: ['Pribadi 🎨', 'Sosial 🤝', 'Belajar 📚', 'Karier 🚀'],
-          datasets: [{
-            data: [stats.pribadi, stats.sosial, stats.belajar, stats.karier],
-            backgroundColor: 'rgba(56, 239, 125, 0.35)',
-            borderColor: '#111827',
-            borderWidth: 3,
-            pointBackgroundColor: '#FF5E97',
-            pointBorderColor: '#111827',
-            pointBorderWidth: 2,
-            pointRadius: 5
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              angleLines: { color: '#e2e8f0', lineWidth: 1.5 },
-              grid: { color: '#e2e8f0', lineWidth: 1.5 },
-              pointLabels: {
-                font: { family: '"Plus Jakarta Sans"', size: 10, weight: 'bold' },
-                color: '#111827'
-              },
-              suggestedMin: 30,
-              suggestedMax: 100,
-              ticks: { display: false }
-            }
-          },
-          plugins: { legend: { display: false } }
-        }
-      });
-    }
-
-    function updateRadarChart() {
-      if (!radarChart) return;
-      radarChart.data.datasets[0].data = [stats.pribadi, stats.sosial, stats.belajar, stats.karier];
-      radarChart.update();
-    }
-
-    function renderQuestTree() {
-      const container = document.getElementById('quest-list');
-      container.innerHTML = '';
-
-      questMissions.forEach((m) => {
-        const isUnlocked = m.id <= unlockedQuest;
-        const isDone = !!completedQuests[m.id];
-        const isCurrent = m.id === unlockedQuest && !isDone;
-
-        const card = document.createElement('div');
-        card.className = `p-3.5 rounded-2xl border-3 border-neo-dark transition-all duration-200 cursor-pointer ${
-          isDone 
-            ? 'bg-emerald-50 border-emerald-900 shadow-brutal-sm' 
-            : isCurrent 
-            ? 'bg-neo-yellow shadow-brutal animate-pulse' 
-            : 'bg-slate-100 border-slate-400 opacity-60'
-        }`;
-
-        card.onclick = () => {
-          if (isUnlocked) openQuestModal(m);
-          else {
-            soundWarning();
-            alert(`🔒 Misi ${m.id} masih terkunci! Selesaikan Misi ${unlockedQuest} dulu.`);
+      options: {
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+            pointLabels: { color: '#cbd5e1', font: { size: 11 } },
+            ticks: { display: false, stepSize: 1 }
           }
-        };
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 
-        card.innerHTML = `
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl border-2 border-neo-dark flex items-center justify-center font-display font-black text-xs ${
-                isDone ? 'bg-neo-cyan text-neo-dark' : isCurrent ? 'bg-white text-neo-dark' : 'bg-slate-200 text-slate-400'
-              }">
-                ${isDone ? '✓' : isUnlocked ? m.id : '🔒'}
-              </div>
-              <div>
-                <span class="text-[9px] font-black uppercase text-slate-500">MISI ${m.id}</span>
-                <h4 class="font-display font-black text-xs text-neo-dark leading-tight">${m.title}</h4>
-              </div>
-            </div>
-            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-neo-dark ${
-              isDone ? 'bg-neo-cyan' : isCurrent ? 'bg-white' : 'bg-slate-200'
-            }">
-              ${isDone ? 'Selesai' : isCurrent ? 'Tantangan Aktif' : 'Terkunci'}
-            </span>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      document.getElementById('quest-counter').textContent = `MISI ${Math.min(unlockedQuest, 6)} / 6`;
-      const xp = Math.min(Math.round(((unlockedQuest - 1) / 6) * 100), 100);
-      document.getElementById('player-xp-bar').style.width = `${Math.max(xp, 15)}%`;
-      document.getElementById('player-lvl').textContent = `LVL ${unlockedQuest}`;
-    }
-
-    function openQuestModal(m) {
-      soundBlip();
-      activeModalQuest = m;
-      document.getElementById('modal-mission-tag').textContent = `MISI ${m.id}`;
-      document.getElementById('modal-mission-title').textContent = m.title;
-      document.getElementById('modal-narrative').textContent = `"${m.narrative}"`;
-
-      const optContainer = document.getElementById('modal-options-container');
-      optContainer.innerHTML = `
-        <button onclick="chooseOption('optA')" class="w-full text-left p-3.5 rounded-xl border-2 border-neo-dark bg-white hover:bg-neo-yellow active:scale-98 transition shadow-brutal-sm group">
-          <span class="text-[10px] font-black uppercase text-neo-pink block mb-0.5">Opsi A • [${m.optA.tag}]</span>
-          <span class="text-xs font-bold text-slate-800 leading-snug">${m.optA.text}</span>
-        </button>
-        <button onclick="chooseOption('optB')" class="w-full text-left p-3.5 rounded-xl border-2 border-neo-dark bg-white hover:bg-neo-yellow active:scale-98 transition shadow-brutal-sm group">
-          <span class="text-[10px] font-black uppercase text-neo-blue block mb-0.5">Opsi B • [${m.optB.tag}]</span>
-          <span class="text-xs font-bold text-slate-800 leading-snug">${m.optB.text}</span>
-        </button>
+  // FLOW 2: POS A
+  function gotoAnalisis() {
+    switchScreen('step-signals', 'step-analisis');
+    const container = document.getElementById('katalog-container');
+    container.innerHTML = '';
+    katalogProdi.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'choice-card';
+      card.innerHTML = `
+        <h4 style="color: var(--teal); margin-bottom: 0.3rem;">${item.nama}</h4>
+        <p style="font-size: 0.8rem; color: var(--amber);">Signal: ${item.signal}</p>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Mapel: ${item.mapel}</p>
+        <button class="btn btn-secondary" style="margin-top: 0.6rem; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="openARSim('${item.nama}')">📲 Pindai AR</button>
       `;
+      container.appendChild(card);
+    });
+  }
 
-      document.getElementById('modal-feedback-box').classList.add('hidden');
-      document.getElementById('modal-quest').classList.remove('hidden');
-    }
+  function openARSim(namaProdi) {
+    const item = katalogProdi.find(x => x.nama === namaProdi);
+    userData.arChoice = item;
+    const modal = document.getElementById('ar-modal');
+    modal.classList.remove('hidden');
+    document.getElementById('ar-title').innerText = `✨ Simulasi AR: ${item.nama}`;
+    document.getElementById('ar-details').innerHTML = `
+      🧠 <strong>Fokus Bidang:</strong> Relevan dengan rumpun minat ${item.signal}.<br>
+      📚 <strong>Mapel Pendukung:</strong> ${item.mapel}.<br>
+      💼 <strong>Peluang Karier:</strong> ${item.karir}.
+    `;
+    modal.scrollIntoView({ behavior: 'smooth' });
+  }
 
-    function closeQuestModal() {
-      document.getElementById('modal-quest').classList.add('hidden');
-    }
+  function saveARResponse(res) {
+    alert(`Respons "${res}" tersimpan untuk prodi ${userData.arChoice.nama}!`);
+    document.getElementById('ar-modal').classList.add('hidden');
+    document.getElementById('btn-next-analisis').classList.remove('hidden');
+  }
 
-    function chooseOption(optKey) {
-      soundSuccess();
-      const m = activeModalQuest;
-      const opt = m[optKey];
+  // FLOW 3: POS D
+  function gotoDekomposisi() {
+    switchScreen('step-analisis', 'step-dekomposisi');
+    const form = document.getElementById('compare-form');
+    form.innerHTML = `
+      <div class="choice-card">
+        <h3>Pilihan Utama: ${userData.arChoice ? userData.arChoice.nama : 'Pilihanmu'}</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">Seberapa kuat pertimbanganmu terhadap prodi ini?</p>
+        <label>1. Minat Pribadi (1-5): <input type="range" min="1" max="5" value="4" style="width:100%"></label><br><br>
+        <label>2. Kemampuan & Kekuatan Diri (1-5): <input type="range" min="1" max="5" value="4" style="width:100%"></label><br><br>
+        <label>3. Kecocokan Nilai/Mapel (1-5): <input type="range" min="1" max="5" value="5" style="width:100%"></label>
+      </div>
+    `;
+  }
+
+  // FLOW 4: POS A (ARAH)
+  function gotoArah() {
+    switchScreen('step-dekomposisi', 'step-arah');
+  }
+
+  function pilihKesiapan(status) {
+    userData.readiness = status;
+    switchScreen('step-arah', 'step-aksi');
+  }
+
+  // FLOW 5: POS R (AKSI)
+  function generateFutureMap() {
+    userData.actions.cari = document.getElementById('action-cari').value || "Mencari detail silabus perkuliahan";
+    userData.actions.coba = document.getElementById('action-coba').value || "Mengikuti webinar/workshop bidang terkait";
+    userData.actions.rencana = document.getElementById('action-rencana').value || "Konsultasi terarah dengan guru BK";
+
+    switchScreen('step-aksi', 'step-final');
+
+    document.getElementById('out-nama').innerText = `Penjelajah: ${userData.nama}`;
+    const sorted = Object.entries(userData.scores).sort((a,b) => b[1] - a[1]);
+    document.getElementById('out-signals').innerText = sorted.slice(0, 3).map(x => x[0]).join(' - ');
+    document.getElementById('out-readiness').innerText = userData.readiness;
+    document.getElementById('out-prodi').innerText = userData.arChoice ? userData.arChoice.nama : "Belum ditentukan";
+    document.getElementById('out-cari').innerText = userData.actions.cari;
+    document.getElementById('out-coba').innerText = userData.actions.coba;
+    document.getElementById('out-rencana').innerText = userData.actions.rencana;
+  }
+</script>
+</body>
+</html>
